@@ -1,7 +1,7 @@
 
 
 /*
-	DictSearch v0.1.2 (2 Nov 2025)
+	DictSearch v0.1.3 (2 Nov 2025)
 	See https://wiki.anpang.lol/misc/DictSearch
 	By Anpang, MIT license
 */
@@ -16,7 +16,7 @@ $("#dict-search").html(`
 		<div id="dict-search-results"></div>
 	</form>
 	<p>
-		See <a href="https://wiki.anpang.lol/misc/DictSearch">DictSearch</a> for help.
+		See <a href="https://wiki.anpang.lol/misc/DictSearch#Usage">DictSearch#Usage</a> for help.
 	</p>
 `);
 
@@ -83,7 +83,11 @@ async function dictSearch(event) {
 
 	event.preventDefault();
 
+	// get query
 	const query = $("#dict-search-input").val();
+	if(query == "") {
+		return;
+	}
 
 	$("#dict-search-results").text("Loading...");
 
