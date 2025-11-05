@@ -1,17 +1,33 @@
 
 
 /*
-	DictSearch v0.1.3 (2 Nov 2025)
+	DictSearch v0.1.4 (5 Nov 2025)
 	See https://wiki.anpang.lol/misc/DictSearch
 	By Anpang, MIT license
 */
+
+
+// languages
+
+const languages = {
+	"fhn": {
+		"name": "Fhaynofian",
+		"letters": ["A", "Ae", "B", "Bp", "D", "Dt", "E", "Er", "F", "G", "Gh", "Gk", "H", "I", "K", "Kh", "M", "N", "Ng", "Ny", "O", "Or", "P", "Q", "R", "S", "Sh", "Sz", "T", "U", "Ue", "V", "Vb", "W", "Y", "Z", "Zh", "Zs"]
+	},
+	"oly": {
+		"name": "Oluyek",
+		"letters": ["A", "B", "C", "D", "E", "'", "F", "G", "H", "I", "J", "K", "L", "M", "N", "Ng", "Ny", "O", "P", "R", "S", "T", "Th", "U", "V", "W", "X", "Y", "Z"]
+	}
+}
+
+const language = mw.config.get("wgPageName").split("/")[0];
 
 
 // put search form
 
 $("#dict-search").html(`
 	<form id="dict-search-form">
-		<input name="title" id="dict-search-input" class="mw-ui-input mw-ui-input-inline" placeholder="English or Oluyek word" size="50" dir="ltr">
+		<input name="title" id="dict-search-input" class="mw-ui-input mw-ui-input-inline" placeholder="English or ${languages[language]["name"]} word" size="50" dir="ltr">
 		<input type="submit" id="dict-search-button" value="Search" class="mw-ui-button mw-ui-progressive">
 		<div id="dict-search-results"></div>
 	</form>
@@ -42,9 +58,10 @@ async function getData() {
 
 	// make url
 	let url = "";
-	for(const letter of ["A", "B", "C", "D", "E", "'", "F", "G", "H", "I", "J", "K", "L", "M", "N", "Ng", "Ny", "O", "P", "R", "S", "T", "Th", "U", "V", "W", "X", "Y", "Z"]) {
-		url += `oly%2FDictionary%2F${letter}`;
-		if(letter !== "Z") {
+	const letters = languages[language]["letters"];
+	for(const letter of letters) {
+		url += `${language}%2FDictionary%2F${letter}`;
+		if(letter !== letters[letters - 1]) {
 			url += "|";
 		}
 	}
@@ -60,6 +77,13 @@ async function getData() {
 		let source, splitted;
 		data = [];
 		for(const pageData of Object.values(json["query"]["pages"])) {
+
+			// page doesn't exist or is invalid, skip it
+			if("missing" in pageData || "invalid" in pageData) {
+				continue;
+			}
+			
+			// parse page
 			source = pageData["revisions"][0]["slots"]["main"]["*"].split("!Notes\n|-\n")[1].split("|}")[0];
 			for(const row of source.split("|-")) {
 				splitted = row.split("|");
@@ -68,6 +92,7 @@ async function getData() {
 					//               word                           type               meaning                  origin page
 				]);
 			}
+
 		}
 
 		dataFetched = true;
@@ -84,7 +109,7 @@ async function dictSearch(event) {
 	event.preventDefault();
 
 	// get query
-	const query = $("#dict-search-input").val();
+	const query = $("#dict-search-input").val().toLowerCase();
 	if(query == "") {
 		return;
 	}
@@ -101,10 +126,10 @@ async function dictSearch(event) {
 	for(const word of data) {
 
 		// add if word or meaning contains query, or the query is the word type
-		if(word[0].includes(query) || word[2].includes(query) || query === word[1]) {
+		if(word[0].toLowerCase().includes(query) || word[2].toLowerCase().includes(query) || query === word[1].toLowerCase()) {
 			results.push(`
 				<li>
-					<b><a href="/oly/Dictionary/${word[3]}">${word[0]}</a></b> - ${word[1]} ${word[2]}
+					<b><a href="/${language}/Dictionary/${word[3]}">${word[0]}</a></b> - ${word[1]} ${word[2]}
 				</li>
 			`);
 		}
